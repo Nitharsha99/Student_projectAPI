@@ -11,13 +11,10 @@ namespace Student_projectAPI.DbContexts
 
         public DbSet<Teacher> Teachers { get; set; }
 
-        public DbSet<Classroom> Classrooms { get; set; }    
+        public DbSet<Classroom> Classrooms { get; set; }
 
         public DbSet<Subject> Subjects { get; set; }
 
-        protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
-        {
-            optionsBuilder.UseSqlServer("Data Source=DESKTOP-NRUK56G\\MSSQLSERVER01;Initial Catalog=Student_Project;Integrated Security=True");
-        }
+
     }
 }
