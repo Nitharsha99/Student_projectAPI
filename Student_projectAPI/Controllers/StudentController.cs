@@ -13,85 +13,108 @@ namespace Student_projectAPI.Controllers
     {
 
         private readonly IConfiguration _configuration;
+        private readonly ILogger<StudentController> _logger;
 
-       public StudentController(IConfiguration configuration)
+        public StudentController(IConfiguration configuration, ILogger<StudentController> logger)
         {
             _configuration = configuration;
+            _logger = logger;
         }
 
         [Route("")]
         [HttpGet]
         public async Task<List<StudentViewModel>> GetAllStudents()
         {
-            List<StudentViewModel> studentList = new List<StudentViewModel>();
-            DataTable dt = new DataTable();
-            SqlConnection con = new SqlConnection(_configuration.GetConnectionString("DefaultConnection"));
-            SqlCommand cmd = new SqlCommand("SELECT * FROM Students inner join Classrooms on Classrooms.Id = Students.ClassroomId", con);
-            SqlDataAdapter adapter = new SqlDataAdapter(cmd);
-            adapter.Fill(dt);
-            for (int i = 0; i < dt.Rows.Count; i++)
+            try
             {
-                StudentViewModel students = new StudentViewModel();
-                students.Id = (int)dt.Rows[i]["id"];
-                students.FirstName = dt.Rows[i]["FirstName"].ToString();
-                students.LastName = dt.Rows[i]["LastName"].ToString();
-                students.ContactPerson = dt.Rows[i]["ContactPerson"].ToString();
-                students.EmailAddress = dt.Rows[i]["EmailAddress"].ToString();
-                students.ContactNo = dt.Rows[i]["ContactNo"].ToString();
-                students.DOB = (DateTime?)dt.Rows[i]["DOB"];
-                students.Age = (int?)dt.Rows[i]["Age"];
-                Classroom classroom = new Classroom();
+                List<StudentViewModel> studentList = new List<StudentViewModel>();
+                DataTable dt = new DataTable();
+                SqlConnection con = new SqlConnection(_configuration.GetConnectionString("DefaultConnection"));
+                SqlCommand cmd = new SqlCommand("SELECT * FROM Students inner join Classrooms on Classrooms.Id = Students.ClassroomId", con);
+                SqlDataAdapter adapter = new SqlDataAdapter(cmd);
+                adapter.Fill(dt);
+                for (int i = 0; i < dt.Rows.Count; i++)
+                {
+                    StudentViewModel students = new StudentViewModel();
+                    students.Id = (int)dt.Rows[i]["id"];
+                    students.FirstName = dt.Rows[i]["FirstName"].ToString();
+                    students.LastName = dt.Rows[i]["LastName"].ToString();
+                    students.ContactPerson = dt.Rows[i]["ContactPerson"].ToString();
+                    students.EmailAddress = dt.Rows[i]["EmailAddress"].ToString();
+                    students.ContactNo = dt.Rows[i]["ContactNo"].ToString();
+                    students.DOB = (DateTime?)dt.Rows[i]["DOB"];
+                    students.Age = (int?)dt.Rows[i]["Age"];
+                    Classroom classroom = new Classroom();
 
-                classroom.Id = Convert.ToInt32(dt.Rows[i]["ClassroomId"]);
-                classroom.Name = dt.Rows[i]["Name"].ToString();
+                    classroom.Id = Convert.ToInt32(dt.Rows[i]["ClassroomId"]);
+                    classroom.Name = dt.Rows[i]["Name"].ToString();
 
-                students.Classroom = classroom;
-                studentList.Add(students);
+                    students.Classroom = classroom;
+                    studentList.Add(students);
+                }
+
+                _logger.LogInformation("Successfully retrieved all students.");
+                return studentList;
             }
-            return studentList ;
+            catch (Exception ex)
+            {
+                _logger.LogInformation("There is a exception : " + ex);
+                throw;
+            }
+  
         }
 
         [Route("{id}")]
         [HttpGet]
         public async Task<StudentViewModel> GetStudentById(int id)
         {
-            DataTable dt = new DataTable();
-            using (SqlConnection con = new SqlConnection(_configuration.GetConnectionString("DefaultConnection")))
+            try
             {
-                con.Open();
-                using (SqlCommand cmd = new SqlCommand("SELECT * FROM Students INNER JOIN Classrooms ON Classrooms.Id = Students.ClassroomId WHERE Students.Id = @Id", con))
+                DataTable dt = new DataTable();
+                using (SqlConnection con = new SqlConnection(_configuration.GetConnectionString("DefaultConnection")))
                 {
-                    cmd.Parameters.AddWithValue("@Id", id);
-                    SqlDataAdapter adapter = new SqlDataAdapter(cmd);
-                    adapter.Fill(dt);
+                    con.Open();
+                    using (SqlCommand cmd = new SqlCommand("SELECT * FROM Students INNER JOIN Classrooms ON Classrooms.Id = Students.ClassroomId WHERE Students.Id = @Id", con))
+                    {
+                        cmd.Parameters.AddWithValue("@Id", id);
+                        SqlDataAdapter adapter = new SqlDataAdapter(cmd);
+                        adapter.Fill(dt);
+                    }
                 }
-            }
 
-            StudentViewModel student = new StudentViewModel();
+                StudentViewModel student = new StudentViewModel();
 
-            if (dt.Rows.Count > 0)
-            {
-                DataRow row = dt.Rows[0];
-
-                student.Id = Convert.ToInt32(row["Id"]);
-                student.FirstName = row["FirstName"].ToString();
-                student.LastName = row["LastName"].ToString();
-                student.ContactPerson = row["ContactPerson"].ToString();
-                student.EmailAddress = row["EmailAddress"].ToString();
-                student.ContactNo = row["ContactNo"].ToString();
-                student.DOB = row["DOB"] is DBNull ? null : (DateTime?)row["DOB"];
-                student.Age = row["Age"] is DBNull ? null : (int?)row["Age"];
-
-                Classroom classroom = new Classroom
+                if (dt.Rows.Count > 0)
                 {
-                    Id = Convert.ToInt32(row["ClassroomId"]),
-                    Name = row["Name"].ToString()
-                };
+                    DataRow row = dt.Rows[0];
 
-                student.Classroom = classroom;
+                    student.Id = Convert.ToInt32(row["Id"]);
+                    student.FirstName = row["FirstName"].ToString();
+                    student.LastName = row["LastName"].ToString();
+                    student.ContactPerson = row["ContactPerson"].ToString();
+                    student.EmailAddress = row["EmailAddress"].ToString();
+                    student.ContactNo = row["ContactNo"].ToString();
+                    student.DOB = row["DOB"] is DBNull ? null : (DateTime?)row["DOB"];
+                    student.Age = row["Age"] is DBNull ? null : (int?)row["Age"];
+
+                    Classroom classroom = new Classroom
+                    {
+                        Id = Convert.ToInt32(row["ClassroomId"]),
+                        Name = row["Name"].ToString()
+                    };
+
+                    student.Classroom = classroom;
+                }
+
+                _logger.LogInformation("Successfully retrieved student detials of id = " + id);
+                return student;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogInformation("There is a exception : " + ex);
+                throw;
             }
 
-            return student;
         }
 
         [Route("")]
@@ -122,22 +145,26 @@ namespace Student_projectAPI.Controllers
 
                     cmd.ExecuteNonQuery();
                     con.Close();
+
+                    _logger.LogInformation("Successfully saved student details" );
                     return Ok(student);
                 }
                 else {
+                    _logger.LogInformation("No data pass");
                     return BadRequest("Invalid student data");
-                        }
+                      }
                
             }
             catch (Exception ex)
             {
-                throw ex;
+                _logger.LogInformation("There is a exception : " + ex);
+                throw;
             }
         }
 
         [Route("{id}")]
         [HttpPatch]
-        public async Task<IActionResult> UpdateProduct(Student student, int id)
+        public async Task<IActionResult> UpdateStudent(Student student, int id)
         {
             try
             {
@@ -167,13 +194,15 @@ namespace Student_projectAPI.Controllers
 
 
                     con.Close();
+                    _logger.LogInformation("Successfully Updated student details of id = " + id);
 
                     return Ok(student);
                 }
             }
             catch (Exception ex)
             {
-                throw ex;
+                _logger.LogInformation("There is a exception : " + ex);
+                throw;
             }
         }
 
@@ -181,31 +210,40 @@ namespace Student_projectAPI.Controllers
         [HttpDelete]
         public async Task<StudentViewModel> DeleteStudent(int id)
         {
-            DataTable dt = new DataTable();
-
-            StudentViewModel deletedStudent = await GetStudentById(id);
-            using (SqlConnection con = new SqlConnection(_configuration.GetConnectionString("DefaultConnection")))
+            try
             {
-                con.Open();
-                using (SqlCommand cmd = new SqlCommand("Delete from Students where Id=@Id", con))
-                {
-                    cmd.Parameters.AddWithValue("@Id", id);
-                    SqlDataAdapter adapter = new SqlDataAdapter(cmd);
-                    adapter.Fill(dt);
-                }
-            }
+                DataTable dt = new DataTable();
 
-            return deletedStudent;
+                StudentViewModel deletedStudent = await GetStudentById(id);
+                using (SqlConnection con = new SqlConnection(_configuration.GetConnectionString("DefaultConnection")))
+                {
+                    con.Open();
+                    using (SqlCommand cmd = new SqlCommand("Delete from Students where Id=@Id", con))
+                    {
+                        cmd.Parameters.AddWithValue("@Id", id);
+                        SqlDataAdapter adapter = new SqlDataAdapter(cmd);
+                        adapter.Fill(dt);
+                    }
+                }
+
+                _logger.LogInformation("Successfully deleted student of id = " + id);
+                return deletedStudent;
+            }
+            catch(Exception ex)
+            {
+                _logger.LogInformation("There is a exception : " + ex);
+                throw;
+            }
         }
 
         private async Task<Student> MapForDatabaseUpdateAsync(Student student, int id)
         {
             Student newlist = new Student();
 
-            StudentController ControllerInstance = new StudentController(_configuration);
+            //StudentController ControllerInstance = new StudentController(_configuration);
 
             // Call GetAllStudents method
-            StudentViewModel DbList = await ControllerInstance.GetStudentById(id);
+            StudentViewModel DbList = await GetStudentById(id);
 
             newlist.FirstName = student.FirstName ?? DbList.FirstName;
             newlist.LastName = student.LastName ?? DbList.LastName;
