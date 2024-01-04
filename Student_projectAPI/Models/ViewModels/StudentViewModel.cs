@@ -1,8 +1,6 @@
-﻿using System.ComponentModel.DataAnnotations;
-
-namespace Student_projectAPI.Models
+﻿namespace Student_projectAPI.Models.ViewModels
 {
-    public class Student
+    public class StudentViewModel
     {
         public int Id { get; set; }
         public string? FirstName { get; set; }
@@ -12,7 +10,6 @@ namespace Student_projectAPI.Models
         public string? ContactNo { get; set; }
         public DateTime? DOB { get; set; }
         public int? Age { get; set; }
-        public int? ClassroomId { get; set; }
-
+        public Classroom Classroom { get; set; }
     }
 }
