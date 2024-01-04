@@ -4,7 +4,6 @@ namespace Student_projectAPI.Models
 {
     public class Student
     {
-        [Key]
         public int Id { get; set; }
         public string? FirstName { get; set; }
         public string? LastName { get; set; }
@@ -13,7 +12,7 @@ namespace Student_projectAPI.Models
         public string? ContactNo { get; set; }
         public DateTime? DOB { get; set; }
         public int? Age { get; set; }
-        public Classroom Classroom { get; set; }
+        public Classroom? Classroom { get; set; }
 
     }
 }

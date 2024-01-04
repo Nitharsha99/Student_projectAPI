@@ -1,13 +1,8 @@
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-using Student_projectAPI.DbContexts;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
-builder.Services.AddDbContext<ApplicationDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("connectionString"), sqlServerOptions =>
-        sqlServerOptions.EnableRetryOnFailure(2, TimeSpan.FromSeconds(10), null)));
 
 
 builder.Services.AddControllers();
